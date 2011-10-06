@@ -75,8 +75,10 @@ Pcap.prototype.open = function (live, device, filter, buffer_size, pcap_output_f
             me.empty_reads += 1;
         }
     };
-    me.readWatcher.set(me.fd, true, false);
-    me.readWatcher.start();
+
+    // set !live playbacks to "writable" so we get an event on EOF
+    this.readWatcher.set(this.fd, true, !live);
+    this.readWatcher.start();
 };
 
 Pcap.prototype.close = function () {
