@@ -42,23 +42,16 @@ Pcap.prototype.open = function (live, device, filter, buffer_size, pcap_output_f
         me.emit('packet', me.buf);
     }
 
-    if (live) {
-        me.device_name = device || binding.default_device();
-        me.link_type = me.session.open_live(me.device_name, filter || "", me.buffer_size, pcap_output_filename || "", packet_ready, monitor || false);
+    if (!live) {
+      var packets_read = binding.dispatch(me.buf, packet_ready);
+      while (packets_read > 0) {
+        packets_read = binding.dispatch(me.buf, packet_ready);
+      }
+      me.emit('eof');
     } else {
-        me.device_name = device;
-        me.link_type = me.session.open_offline(me.device_name, filter || "", me.buffer_size, pcap_output_filename || "", packet_ready);
-    }
-
-    me.fd = me.session.fileno();
-    me.opened = true;
-    me.readWatcher = new SocketWatcher();
-    me.empty_reads = 0;
-    me.buf = new Buffer(65535);
-
-    // readWatcher gets a callback when pcap has data to read. multiple packets may be readable.
-    me.readWatcher.callback = function pcap_read_callback() {
-        var packets_read = me.session.dispatch(me.buf);
+      // readWatcher gets a callback when pcap has data to read. multiple packets may be readable.
+      this.readWatcher.callback = function pcap_read_callback() {
+        var packets_read = binding.dispatch(me.buf, packet_ready);
         if (packets_read < 1) {
             // according to pcap_dispatch documentation if 0 is returned when reading
             // from a savefile there will be no more packets left. this check ensures
@@ -74,11 +67,10 @@ Pcap.prototype.open = function (live, device, filter, buffer_size, pcap_output_f
             me.emit('eof');
             me.empty_reads += 1;
         }
-    };
-
-    // set !live playbacks to "writable" so we get an event on EOF
-    this.readWatcher.set(this.fd, true, !live);
-    this.readWatcher.start();
+      };
+      this.readWatcher.set(this.fd, true, false);
+      this.readWatcher.start();
+    }
 };
 
 Pcap.prototype.close = function () {
