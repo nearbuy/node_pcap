@@ -1556,6 +1556,15 @@ TCP_tracker.prototype.setup_http_tracking = function (session) {
     }
   };
 
+  http.response_parser.onBody = function(buf, start, len) {
+    http.response.body_len += len;
+    self.emit('http response body', session, http, buf.slice(start, start + len));
+  };
+
+  http.response_parser.onMessageComplete = function() {
+    self.emit('http response complete', session, http);
+  };
+
   session.http = http;
 };
 
