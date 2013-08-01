@@ -1556,36 +1556,6 @@ TCP_tracker.prototype.setup_http_tracking = function (session) {
     }
   };
 
-  http.response_parser.onBody = function(buf, start, len) {
-    http.response.body_len += len;
-    self.emit('http response body', session, http, buf.slice(start, start + len));
-  };
-
-            if (http.response.status_code === 101 && http.response.headers.Upgrade === "WebSocket") {
-                if (http.response.headers["Sec-WebSocket-Location"]) {
-                    self.setup_websocket_tracking(session, "draft76");
-                } else {
-                    self.setup_websocket_tracking(session);
-                }
-                self.emit('websocket upgrade', session, http);
-                session.http_detect = false;
-                session.websocket_detect = true;
-                delete http.response_parser.onMessageComplete;
-            } else {
-                self.emit('http response', session, http);
-            }
-        };
-
-        http.response_parser.onBody = function (buf, start, len) {
-            http.response.body_len += len;
-            self.emit('http response body', session, http, buf.slice(start, start + len));
-        };
-
-        http.response_parser.onMessageComplete = function () {
-            self.emit('http response complete', session, http);
-        };
-    };
-
   session.http = http;
 };
 
