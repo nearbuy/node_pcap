@@ -377,4 +377,3 @@ PcapSession::Inject(const Arguments& args)
 
     return Undefined();
 }
-
