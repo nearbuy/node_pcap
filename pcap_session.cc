@@ -330,8 +330,7 @@ PcapSession::Stats(const Arguments& args)
     PcapSession* session = ObjectWrap::Unwrap<PcapSession>(args.This());
 
     if (pcap_stats(session->pcap_handle, &ps) == -1) {
-        return ThrowException(Exception::Error(String::New("Error in pcap_stats")));
-        // TODO - use pcap_geterr to figure out what the error was
+        return ThrowException(Exception::Error(String::New(pcap_geterr(session->pcap_handle))));
     }
 
     Local<Object> stats_obj = Object::New();
